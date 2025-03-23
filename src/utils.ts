@@ -14,6 +14,16 @@ export function getLastUpdatedText(timestamp: number | null): string {
   return new Date(timestamp).toLocaleString();
 }
 
+export function getDiscountColor(discountRatio: number): string {
+  if (discountRatio >= 30) {
+    return "#FF2D55";
+  } else if (discountRatio >= 15) {
+    return "#FF9500";
+  } else {
+    return "#FFD700";
+  }
+}
+
 export function getUniqueProducts(allProducts: Product[]): Product[] {
   const productMap = new Map<number, Product>();
 

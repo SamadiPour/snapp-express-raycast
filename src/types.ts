@@ -37,6 +37,13 @@ interface ProductsResponse {
   };
 }
 
+interface DataCache {
+  products: Product[];
+  vendors: Vendor[];
+  lastFetchTimestamp: number;
+  isFromCache: boolean;
+}
+
 interface ProductDetailViewProps {
   product: Product;
 }

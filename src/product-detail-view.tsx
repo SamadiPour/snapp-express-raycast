@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
-import { Action, ActionPanel, List, LocalStorage, showToast, Toast } from "@raycast/api";
-import { formatPrice } from "./utils";
-
-const CACHE_KEY_PRODUCTS = "cached_products";
-const CACHE_KEY_VENDORS = "cached_vendors";
+import { Action, ActionPanel, List, showToast, Toast } from "@raycast/api";
+import { formatPrice, getDiscountColor } from "./utils";
+import { fetchProductsCached } from "./api";
 
 export default function ProductDetailView({ product }: ProductDetailViewProps) {
   const [isLoading, setIsLoading] = useState(true);
@@ -12,14 +10,14 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
 
   useEffect(() => {
     const findProductAcrossVendors = async () => {
-      try {
-        setIsLoading(true);
-        const cachedProducts = await LocalStorage.getItem<string>(CACHE_KEY_PRODUCTS);
-        const cachedVendors = await LocalStorage.getItem<string>(CACHE_KEY_VENDORS);
+      setIsLoading(true);
 
-        if (cachedProducts) {
+      try {
+        const cachedData = await fetchProductsCached(false, false, false);
+
+        if (cachedData.products) {
           // Use cached data to find matching products
-          const allProducts = JSON.parse(cachedProducts) as Product[];
+          const allProducts = cachedData.products;
           const productTitle = product.title.toLowerCase();
 
           // Find matching products by title
@@ -35,11 +33,7 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
           console.error("Error finding product");
         }
 
-        if (cachedVendors) {
-          console.log(cachedVendors);
-          const allVendors = JSON.parse(cachedVendors) as Vendor[];
-          setVendors(allVendors);
-        }
+        setVendors(cachedData.vendors);
       } catch (error) {
         console.error("Error finding product across vendors:", error);
         await showToast(Toast.Style.Failure, "Failed to find vendors");
@@ -67,18 +61,18 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
               title={vendorProduct.vendorTitle}
               subtitle={formatPrice(vendorProduct.price)}
               accessories={[
-                {
-                  tag: {
-                    value: `${vendorProduct.discountRatio}% OFF`,
-                    color: vendorProduct.discountRatio >= 30 ? "#FF2D55" : "#FF9500"
-                  }
-                },
                 isVendorPro ? {
                   tag: {
                     value: "PRO",
                     color: "#007AFF"
                   }
                 } : {},
+                {
+                  tag: {
+                    value: `${vendorProduct.discountRatio}%`,
+                    color: getDiscountColor(product.discountRatio),
+                  }
+                },
                 {
                   text: formatPrice(vendorProduct.price - vendorProduct.discount),
                   tooltip: `Original price: ${formatPrice(vendorProduct.price)}`
@@ -87,8 +81,8 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
               actions={
                 <ActionPanel>
                   <Action.CopyToClipboard
-                    title="Copy Vendor Details"
-                    content={`${product.title}\nVendor: ${vendorProduct.vendorTitle}\nPrice: ${formatPrice(vendorProduct.price - vendorProduct.discount)} (${vendorProduct.discountRatio}% off)`}
+                    title="Copy Product Title"
+                    content={product.title}
                   />
                 </ActionPanel>
               }
