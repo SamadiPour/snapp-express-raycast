@@ -83,6 +83,7 @@ export default function Command() {
                 <Action
                   title="Refresh Data"
                   icon={Icon.ArrowClockwise}
+                  shortcut={{ modifiers: ["cmd"], key: "r" }}
                   onAction={() => fetchData(true)}
                 />
               </ActionPanel>

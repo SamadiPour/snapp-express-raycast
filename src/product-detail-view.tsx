@@ -81,6 +81,10 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
               ]}
               actions={
                 <ActionPanel>
+                  <Action.OpenInBrowser
+                    title="Open Product Page"
+                    url={`https://express.snapp.market/supermarket/a/${vendor?.data.code}/market-party`}
+                  />
                   <Action.CopyToClipboard
                     title="Copy Product Title"
                     content={product.title}
