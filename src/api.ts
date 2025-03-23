@@ -55,7 +55,7 @@ export async function fetchProductsCached(
   checkIfValid = true,
   forceRefresh = false,
   vendorFetchedCallback?: (vendors: Vendor[]) => void
-): Promise<DataCache> {
+): Promise<DataCache | null> {
   const cachedLastFetch = await LocalStorage.getItem<string>(CACHE_KEY_LAST_FETCH);
   const cachedProducts = await LocalStorage.getItem<string>(CACHE_KEY_PRODUCTS);
   const cachedVendors = await LocalStorage.getItem<string>(CACHE_KEY_VENDORS);
@@ -64,10 +64,10 @@ export async function fetchProductsCached(
   // Check if we have cached data and it's not expired
   if (!forceRefresh) {
     if (cachedLastFetch && cachedProducts && cachedVendors && cachedExpiration) {
-      const now = Date.now();
-      const lastFetchTimestamp = parseInt(cachedLastFetch, 10);
-      const expirationTimestamp = parseInt(cachedExpiration, 10);
-      if (checkIfValid || now < expirationTimestamp) {
+      const now = new Date();
+      const lastFetchTimestamp = new Date(cachedLastFetch);
+      const expirationTimestamp = new Date(cachedExpiration);
+      if (!checkIfValid || now < expirationTimestamp) {
         const products = JSON.parse(cachedProducts);
         const vendors = JSON.parse(cachedVendors);
         return { products, vendors, lastFetchTimestamp, isFromCache: true };
@@ -75,7 +75,7 @@ export async function fetchProductsCached(
     }
   }
 
-  if (!requestIfNotFound) return { products: [], vendors: [], lastFetchTimestamp: 0, isFromCache: false };
+  if (!requestIfNotFound) return null;
 
   // Fetch fresh data
   const vendors = await fetchVendors();
@@ -101,11 +101,11 @@ export async function fetchProductsCached(
   allProducts = allProducts.filter((product) => !product.is_out_of_stock);
 
   // Store in cache
-  const currentTime = Date.now();
+  const now = new Date();
   await LocalStorage.setItem(CACHE_KEY_PRODUCTS, JSON.stringify(allProducts));
   await LocalStorage.setItem(CACHE_KEY_VENDORS, JSON.stringify(vendors));
-  await LocalStorage.setItem(CACHE_KEY_LAST_FETCH, currentTime.toString());
-  await LocalStorage.setItem(CACHE_KEY_EXPIRATION, firstActivePeriodEndRFC?.toString() ?? currentTime.toString());
+  await LocalStorage.setItem(CACHE_KEY_LAST_FETCH, now.toString());
+  await LocalStorage.setItem(CACHE_KEY_EXPIRATION, firstActivePeriodEndRFC?.toString() ?? now.toString());
 
-  return { products: allProducts, vendors, lastFetchTimestamp: currentTime, isFromCache: false };
+  return { products: allProducts, vendors, lastFetchTimestamp: now, isFromCache: false };
 }

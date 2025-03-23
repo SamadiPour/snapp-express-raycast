@@ -41,7 +41,7 @@ interface ProductsResponse {
 interface DataCache {
   products: Product[];
   vendors: Vendor[];
-  lastFetchTimestamp: number;
+  lastFetchTimestamp: Date;
   isFromCache: boolean;
 }
 

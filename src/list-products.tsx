@@ -7,7 +7,7 @@ import ProductDetailView from "./product-detail-view";
 export default function Command() {
   const [isLoading, setIsLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
-  const [lastFetchTime, setLastFetchTime] = useState<number | null>(null);
+  const [lastFetchTime, setLastFetchTime] = useState<Date | null>(null);
 
   const fetchData = async (forceRefresh = false) => {
     setIsLoading(true);
@@ -19,15 +19,17 @@ export default function Command() {
         (vendors) => showToast(Toast.Style.Animated, `Fetching products from ${vendors.length} vendors...`)
       );
 
-      // Process products (deduplicate and sort)
-      const uniqueProducts = getUniqueProducts(cachedData.products);
-      uniqueProducts.sort((a, b) => b.discountRatio - a.discountRatio);
+      if (cachedData) {
+        // Process products (deduplicate and sort)
+        const uniqueProducts = getUniqueProducts(cachedData.products);
+        uniqueProducts.sort((a, b) => b.discountRatio - a.discountRatio);
 
-      // Use cached data
-      setProducts(uniqueProducts);
-      setLastFetchTime(cachedData.lastFetchTimestamp);
+        // Use cached data
+        setProducts(uniqueProducts);
+        setLastFetchTime(cachedData.lastFetchTimestamp);
 
-      await showToast(Toast.Style.Success, `Found ${uniqueProducts.length} discounted products`);
+        await showToast(Toast.Style.Success, `Found ${uniqueProducts.length} discounted products`);
+      }
     } catch (err) {
       console.error("Error fetching data:", err);
       await showToast(Toast.Style.Failure, "Failed to fetch data");
@@ -59,7 +61,7 @@ export default function Command() {
               {
                 tag: {
                   value: `${product.discountRatio}%`,
-                  color: getDiscountColor(product.discountRatio),
+                  color: getDiscountColor(product.discountRatio)
                 }
               },
               {

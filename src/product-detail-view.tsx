@@ -14,26 +14,27 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
 
       try {
         const cachedData = await fetchProductsCached(false, false, false);
+        if (cachedData) {
+          if (cachedData.products) {
+            // Use cached data to find matching products
+            const allProducts = cachedData.products;
+            const productTitle = product.title.toLowerCase();
 
-        if (cachedData.products) {
-          // Use cached data to find matching products
-          const allProducts = cachedData.products;
-          const productTitle = product.title.toLowerCase();
+            // Find matching products by title
+            const matches = allProducts.filter(
+              p => p.title.toLowerCase() === productTitle
+            );
 
-          // Find matching products by title
-          const matches = allProducts.filter(
-            p => p.title.toLowerCase() === productTitle
-          );
+            // Sort by discount percentage (highest first)
+            matches.sort((a, b) => b.discountRatio - a.discountRatio);
 
-          // Sort by discount percentage (highest first)
-          matches.sort((a, b) => b.discountRatio - a.discountRatio);
+            setVendorProducts(matches);
+          } else {
+            console.error("Error finding product");
+          }
 
-          setVendorProducts(matches);
-        } else {
-          console.error("Error finding product");
+          setVendors(cachedData.vendors);
         }
-
-        setVendors(cachedData.vendors);
       } catch (error) {
         console.error("Error finding product across vendors:", error);
         await showToast(Toast.Style.Failure, "Failed to find vendors");

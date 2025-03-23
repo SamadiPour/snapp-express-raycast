@@ -2,16 +2,16 @@ export function formatPrice(price: number): string {
   return `${price.toLocaleString()} تومان`;
 }
 
-export function getLastUpdatedText(timestamp: number | null): string {
+export function getLastUpdatedText(timestamp: Date | null): string {
   if (!timestamp) return "Never";
 
-  const now = Date.now();
-  const diff = now - timestamp;
+  const now = new Date();
+  const diff = now.getTime() - timestamp.getTime();
 
   if (diff < 60000) return "Just now";
   if (diff < 3600000) return `${Math.floor(diff / 60000)} minutes ago`;
   if (diff < 86400000) return `${Math.floor(diff / 3600000)} hours ago`;
-  return new Date(timestamp).toLocaleString();
+  return timestamp.toLocaleString();
 }
 
 export function getDiscountColor(discountRatio: number): string {
