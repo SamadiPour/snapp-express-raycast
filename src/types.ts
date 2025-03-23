@@ -45,6 +45,6 @@ interface DataCache {
   isFromCache: boolean;
 }
 
-interface ProductVendorListProps {
+interface ProductProps {
   product: Product;
 }

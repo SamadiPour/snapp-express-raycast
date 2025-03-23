@@ -3,7 +3,7 @@ import { Action, ActionPanel, List, showToast, Toast } from "@raycast/api";
 import { formatPrice, getDiscountColor } from "./utils";
 import { fetchProductsCached } from "./api";
 
-export default function ProductVendorList({ product }: ProductVendorListProps) {
+export default function ProductVendorList({ product }: ProductProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [vendorProducts, setVendorProducts] = useState<Product[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);

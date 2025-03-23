@@ -3,6 +3,7 @@ import { Action, ActionPanel, Icon, List, showToast, Toast } from "@raycast/api"
 import { fetchProductsCached } from "./api";
 import { formatPrice, getDiscountColor, getLastUpdatedText, getUniqueProducts } from "./utils";
 import ProductVendorList from "./product-vendor-list";
+import ProductDetails from "./product-details";
 
 export default function Command() {
   const [isLoading, setIsLoading] = useState(true);
@@ -85,6 +86,12 @@ export default function Command() {
                   icon={Icon.ArrowClockwise}
                   shortcut={{ modifiers: ["cmd"], key: "r" }}
                   onAction={() => fetchData(true)}
+                />
+                <Action.Push
+                  title="Product details"
+                  icon={Icon.List}
+                  shortcut={{modifiers: [], key: "space"}}
+                  target={<ProductDetails product={product} />}
                 />
               </ActionPanel>
             }
