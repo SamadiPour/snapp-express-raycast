@@ -3,7 +3,7 @@ import { Action, ActionPanel, List, showToast, Toast } from "@raycast/api";
 import { formatPrice, getDiscountColor } from "./utils";
 import { fetchProductsCached } from "./api";
 
-export default function ProductDetailView({ product }: ProductDetailViewProps) {
+export default function ProductVendorList({ product }: ProductVendorListProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [vendorProducts, setVendorProducts] = useState<Product[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
@@ -71,7 +71,7 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
                 {
                   tag: {
                     value: `${vendorProduct.discountRatio}%`,
-                    color: getDiscountColor(product.discountRatio),
+                    color: getDiscountColor(product.discountRatio)
                   }
                 },
                 {

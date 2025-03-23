@@ -11,7 +11,7 @@
   "license": "MIT",
   "commands": [
     {
-      "name": "list-products",
+      "name": "product-list",
       "title": "List Products",
       "description": "",
       "mode": "view"

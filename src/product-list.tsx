@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Action, ActionPanel, Icon, List, showToast, Toast } from "@raycast/api";
 import { fetchProductsCached } from "./api";
 import { formatPrice, getDiscountColor, getLastUpdatedText, getUniqueProducts } from "./utils";
-import ProductDetailView from "./product-detail-view";
+import ProductVendorList from "./product-vendor-list";
 
 export default function Command() {
   const [isLoading, setIsLoading] = useState(true);
@@ -74,7 +74,7 @@ export default function Command() {
                 <Action.Push
                   title="Show details"
                   icon={Icon.List}
-                  target={<ProductDetailView product={product} />}
+                  target={<ProductVendorList product={product} />}
                 />
                 <Action.CopyToClipboard
                   title="Copy Product Title"
