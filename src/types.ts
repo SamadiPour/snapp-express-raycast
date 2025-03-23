@@ -31,6 +31,7 @@ interface Product {
 interface ProductsResponse {
   status: boolean;
   data: {
+    firstActivePeriodEndRFC: string;
     products: {
       List: Product[];
     };

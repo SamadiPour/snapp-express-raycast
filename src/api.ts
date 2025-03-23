@@ -7,7 +7,7 @@ const LONGITUDE = getPreferenceValues().longitude;
 const CACHE_KEY_PRODUCTS = "cached_products";
 const CACHE_KEY_VENDORS = "cached_vendors";
 const CACHE_KEY_LAST_FETCH = "last_fetch_timestamp";
-const CACHE_EXPIRATION = 60 * 60 * 1000; // 1 hour in milliseconds
+const CACHE_KEY_EXPIRATION = "cached_expiration";
 
 // Fetch vendors from API
 export async function fetchVendors(): Promise<Vendor[]> {
@@ -29,7 +29,7 @@ export async function fetchVendors(): Promise<Vendor[]> {
 }
 
 // Fetch products for a specific vendor
-export async function fetchProducts(vendorCode: string): Promise<Product[]> {
+export async function fetchMarketPartyProducts(vendorCode: string): Promise<ProductsResponse | null> {
   try {
     const response = await fetch(
       `${API_URL}/market-party/${vendorCode}?variable=${vendorCode}&page_size=200&lat=${LATITUDE}&long=${LONGITUDE}`
@@ -39,13 +39,13 @@ export async function fetchProducts(vendorCode: string): Promise<Product[]> {
     const data: ProductsResponse = await response.json();
 
     if (!data.status || !data.data?.products?.List) {
-      return [];
+      return null;
     }
 
-    return data.data.products.List;
+    return data;
   } catch (error) {
     console.error(`Error fetching products for ${vendorCode}:`, error);
-    return [];
+    return null;
   }
 }
 
@@ -59,16 +59,15 @@ export async function fetchProductsCached(
   const cachedLastFetch = await LocalStorage.getItem<string>(CACHE_KEY_LAST_FETCH);
   const cachedProducts = await LocalStorage.getItem<string>(CACHE_KEY_PRODUCTS);
   const cachedVendors = await LocalStorage.getItem<string>(CACHE_KEY_VENDORS);
-
-  const isCacheValid = (lastFetchTimestamp: number) => {
-    return Date.now() - lastFetchTimestamp < CACHE_EXPIRATION;
-  };
+  const cachedExpiration = await LocalStorage.getItem<string>(CACHE_KEY_EXPIRATION);
 
   // Check if we have cached data and it's not expired
   if (!forceRefresh) {
-    if (cachedLastFetch && cachedProducts && cachedVendors) {
+    if (cachedLastFetch && cachedProducts && cachedVendors && cachedExpiration) {
+      const now = Date.now();
       const lastFetchTimestamp = parseInt(cachedLastFetch, 10);
-      if (checkIfValid || isCacheValid(lastFetchTimestamp)) {
+      const expirationTimestamp = parseInt(cachedExpiration, 10);
+      if (checkIfValid || now < expirationTimestamp) {
         const products = JSON.parse(cachedProducts);
         const vendors = JSON.parse(cachedVendors);
         return { products, vendors, lastFetchTimestamp, isFromCache: true };
@@ -83,19 +82,30 @@ export async function fetchProductsCached(
   if (vendorFetchedCallback) vendorFetchedCallback(vendors);
 
   // Fetch products for each vendor
-  const allProducts = [];
+  let allProducts = [];
+  let firstActivePeriodEndRFC = null;
   for (const vendor of vendors) {
-    const products = await fetchProducts(vendor.data.code);
-    allProducts.push(...products);
+    const productResponse = await fetchMarketPartyProducts(vendor.data.code);
+    if (productResponse) {
+      const products = productResponse.data.products.List;
+      allProducts.push(...products);
+
+      if (!firstActivePeriodEndRFC
+        || new Date(productResponse.data.firstActivePeriodEndRFC) < new Date(firstActivePeriodEndRFC)) {
+        firstActivePeriodEndRFC = productResponse.data.firstActivePeriodEndRFC;
+      }
+    }
   }
 
-  // Update state and cache
-  const currentTime = Date.now();
+  // remove finished products
+  allProducts = allProducts.filter((product) => !product.is_out_of_stock);
 
   // Store in cache
+  const currentTime = Date.now();
   await LocalStorage.setItem(CACHE_KEY_PRODUCTS, JSON.stringify(allProducts));
   await LocalStorage.setItem(CACHE_KEY_VENDORS, JSON.stringify(vendors));
   await LocalStorage.setItem(CACHE_KEY_LAST_FETCH, currentTime.toString());
+  await LocalStorage.setItem(CACHE_KEY_EXPIRATION, firstActivePeriodEndRFC?.toString() ?? currentTime.toString());
 
   return { products: allProducts, vendors, lastFetchTimestamp: currentTime, isFromCache: false };
 }
