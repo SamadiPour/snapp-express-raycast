@@ -4,7 +4,7 @@ import { formatPrice, getDiscountColor } from "./utils";
 export default function ProductDetails({ product }: ProductProps) {
   return (
     <Detail
-      markdown={`![Product Image](${product.main_image || "https://via.placeholder.com/300x300?text=No+Image"})`}
+      markdown={`![Product Image](${product.main_image || "https://placehold.co/300x300?text=No+Image"})`}
       metadata={
         <Detail.Metadata>
           <Detail.Metadata.Label title="Product ID" text={product.productVariationId.toString()} />

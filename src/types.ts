@@ -48,3 +48,11 @@ interface DataCache {
 interface ProductProps {
   product: Product;
 }
+
+interface ProductItemProps {
+  product: Product;
+  isPinned: boolean;
+  onPinProduct: (product: Product) => Promise<void>;
+  onUnpinProduct: (product: Product) => Promise<void>;
+  onRefreshData: () => Promise<void>;
+}

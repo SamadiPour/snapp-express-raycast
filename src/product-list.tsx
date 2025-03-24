@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
-import { Action, ActionPanel, Icon, List, showToast, Toast } from "@raycast/api";
-import { fetchProductsCached } from "./api";
-import { formatPrice, getDiscountColor, getLastUpdatedText, getUniqueProducts } from "./utils";
-import ProductVendorList from "./product-vendor-list";
-import ProductDetails from "./product-details";
+import { List, showToast, Toast } from "@raycast/api";
+import { fetchProductsCached } from "./logic/api";
+import { getLastUpdatedText, getUniqueProducts } from "./utils";
+import { findPinnedProducts, getPinnedProductIds, pinProduct, unpinProduct } from "./logic/pin-product";
+import { renderProductItem } from "./components/product-item";
 
 export default function Command() {
   const [isLoading, setIsLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
+  const [pinnedProductIds, setPinnedProductIds] = useState<(number)[]>([]);
   const [lastFetchTime, setLastFetchTime] = useState<Date | null>(null);
 
   const fetchData = async (forceRefresh = false) => {
@@ -25,7 +26,8 @@ export default function Command() {
         const uniqueProducts = getUniqueProducts(cachedData.products);
         uniqueProducts.sort((a, b) => b.discountRatio - a.discountRatio);
 
-        // Use cached data
+        // Set state
+        setPinnedProductIds(await getPinnedProductIds());
         setProducts(uniqueProducts);
         setLastFetchTime(cachedData.lastFetchTimestamp);
 
@@ -39,64 +41,59 @@ export default function Command() {
     setIsLoading(false);
   };
 
+  // Handle pinning a product
+  const handlePinProduct = async (product: Product) => {
+    await pinProduct(product.productVariationId);
+    setPinnedProductIds(prev => [...prev, product.productVariationId]);
+    await showToast(Toast.Style.Success, "Product pinned");
+  };
+
+  const handleUnpinProduct = async (product: Product) => {
+    await unpinProduct(product.productVariationId);
+    setPinnedProductIds(prev => prev.filter(id => id !== product.productVariationId));
+    await showToast(Toast.Style.Success, "Product unpinned");
+  };
+
   // Load data on initial mount
   useEffect(() => {
     fetchData(false);
   }, []);
+
+  const pinnedProducts = findPinnedProducts(products, pinnedProductIds);
+  const unpinnedProducts = products.filter(product =>
+    !pinnedProductIds.includes(product.productVariationId)
+  );
 
   return (
     <List
       isLoading={isLoading}
       searchBarPlaceholder="Search products..."
     >
+      {/* Pinned Section */}
+      {pinnedProducts.length > 0 && (
+        <List.Section title={`Pinned Products (${pinnedProducts.length})`}>
+          {pinnedProducts.map((product) => renderProductItem({
+            product,
+            isPinned: true,
+            onPinProduct: handlePinProduct,
+            onUnpinProduct: handleUnpinProduct,
+            onRefreshData: () => fetchData(true)
+          }))}
+        </List.Section>
+      )}
+
+      {/* Discounted Products */}
       <List.Section
         title={`Discounted Products (${products.length})`}
         subtitle={`Last updated: ${getLastUpdatedText(lastFetchTime)}`}
       >
-        {products.map((product) => (
-          <List.Item
-            key={product.productVariationId}
-            title={product.title}
-            subtitle={product.vendorTitle}
-            accessories={[
-              {
-                tag: {
-                  value: `${product.discountRatio}%`,
-                  color: getDiscountColor(product.discountRatio)
-                }
-              },
-              {
-                text: formatPrice(product.price - product.discount),
-                tooltip: `Original: ${formatPrice(product.price)}`
-              }
-            ]}
-            actions={
-              <ActionPanel>
-                <Action.Push
-                  title="Show details"
-                  icon={Icon.List}
-                  target={<ProductVendorList product={product} />}
-                />
-                <Action.CopyToClipboard
-                  title="Copy Product Title"
-                  content={product.title}
-                />
-                <Action
-                  title="Refresh Data"
-                  icon={Icon.ArrowClockwise}
-                  shortcut={{ modifiers: ["cmd"], key: "r" }}
-                  onAction={() => fetchData(true)}
-                />
-                <Action.Push
-                  title="Product details"
-                  icon={Icon.List}
-                  shortcut={{modifiers: [], key: "space"}}
-                  target={<ProductDetails product={product} />}
-                />
-              </ActionPanel>
-            }
-          />
-        ))}
+        {unpinnedProducts.map((product) => renderProductItem({
+          product,
+          isPinned: false,
+          onPinProduct: handlePinProduct,
+          onUnpinProduct: handleUnpinProduct,
+          onRefreshData: () => fetchData(true)
+        }))}
       </List.Section>
     </List>
   );
