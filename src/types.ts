@@ -56,3 +56,13 @@ interface ProductItemProps {
   onUnpinProduct: (product: Product) => Promise<void>;
   onRefreshData: () => Promise<void>;
 }
+
+interface MissingPinnedProductProps {
+  info: PinnedProductInfo;
+  onUnpin: (productId: number) => Promise<void>;
+}
+
+interface PinnedProductInfo {
+  productVariationId: number;
+  title: string;
+}

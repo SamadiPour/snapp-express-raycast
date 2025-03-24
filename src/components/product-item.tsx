@@ -3,7 +3,7 @@ import { formatPrice, getDiscountColor } from "../utils";
 import ProductVendorList from "../product-vendor-list";
 import ProductDetails from "../product-details";
 
-export function renderProductItem(
+export function ProductItem(
   {
     product,
     isPinned,
