@@ -8,7 +8,7 @@ import { MissingPinnedProduct } from "./components/missing-pinned-item";
 
 export default function Command() {
   const [isLoading, setIsLoading] = useState(true);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<MarketPartyProduct[]>([]);
   const [pinnedInfos, setPinnedInfos] = useState<PinnedProductInfo[]>([]);
   const [lastFetchTime, setLastFetchTime] = useState<Date | null>(null);
 
@@ -43,7 +43,7 @@ export default function Command() {
   };
 
   // Handle pinning a product
-  const handlePinProduct = async (product: Product) => {
+  const handlePinProduct = async (product: MarketPartyProduct) => {
     await pinProduct(product);
     setPinnedInfos(prev => [...prev, product]);
     await showToast(Toast.Style.Success, "Product pinned");

@@ -20,7 +20,7 @@ export async function fetchVendors(): Promise<Vendor[]> {
     const data: VendorsResponse = await response.json();
 
     return data.data.finalResult.filter(
-      (item): item is Vendor => item.type === "VENDOR"
+      item => item.type === "VENDOR"
     );
   } catch (error) {
     console.error("Error fetching vendors:", error);

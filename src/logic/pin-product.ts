@@ -9,7 +9,7 @@ export async function getPinnedProducts(): Promise<PinnedProductInfo[]> {
 }
 
 // Pin a product - store more info now
-export async function pinProduct(product: Product): Promise<void> {
+export async function pinProduct(product: MarketPartyProduct): Promise<void> {
   const pinnedProducts = await getPinnedProducts();
   if (!pinnedProducts.some(p => p.productVariationId === product.productVariationId)) {
     pinnedProducts.push({
@@ -34,8 +34,8 @@ export async function isProductPinned(productId: number): Promise<boolean> {
 }
 
 // Helper to find pinned products from a list of products
-export function findPinnedProducts(allProducts: Product[], pinnedInfos: PinnedProductInfo[]): {
-  pinnedProducts: Product[],
+export function findPinnedProducts(allProducts: MarketPartyProduct[], pinnedInfos: PinnedProductInfo[]): {
+  pinnedProducts: MarketPartyProduct[],
   missingPinnedProducts: PinnedProductInfo[]
 } {
   const pinnedIds = new Set(pinnedInfos.map(p => p.productVariationId));

@@ -24,8 +24,8 @@ export function getDiscountColor(discountRatio: number): string {
   }
 }
 
-export function getUniqueProducts(allProducts: Product[]): Product[] {
-  const productMap = new Map<number, Product>();
+export function getUniqueProducts(allProducts: MarketPartyProduct[]): MarketPartyProduct[] {
+  const productMap = new Map<number, MarketPartyProduct>();
 
   allProducts.forEach((product) => {
     if (!productMap.has(product.productVariationId) || productMap.get(product.productVariationId)!.discountRatio < product.discountRatio) {
@@ -36,6 +36,6 @@ export function getUniqueProducts(allProducts: Product[]): Product[] {
   return Array.from(productMap.values());
 }
 
-export function productDuplicateCount(allProducts: Product[], product: Product): number {
+export function productDuplicateCount(allProducts: MarketPartyProduct[], product: MarketPartyProduct): number {
   return allProducts.filter(p => p.productVariationId === product.productVariationId).length;
 }

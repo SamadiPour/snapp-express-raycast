@@ -5,7 +5,7 @@ import { fetchProductsCached } from "./logic/api";
 
 export default function ProductVendorList({ product }: ProductProps) {
   const [isLoading, setIsLoading] = useState(true);
-  const [vendorProducts, setVendorProducts] = useState<Product[]>([]);
+  const [vendorProducts, setVendorProducts] = useState<MarketPartyProduct[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
 
   useEffect(() => {
