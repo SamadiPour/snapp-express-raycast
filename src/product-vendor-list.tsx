@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { Action, ActionPanel, List, showToast, Toast } from "@raycast/api";
 import { formatPrice, getDiscountColor } from "./utils";
 import { fetchProductsCached } from "./logic/api";
+import { compareProducts, getProductId } from "./logic/product-utils";
 
 export default function ProductVendorList({ product }: ProductProps) {
   const [isLoading, setIsLoading] = useState(true);
-  const [vendorProducts, setVendorProducts] = useState<MarketPartyProduct[]>([]);
+  const [vendorProducts, setVendorProducts] = useState<Product[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
 
   useEffect(() => {
@@ -15,24 +16,27 @@ export default function ProductVendorList({ product }: ProductProps) {
       try {
         const cachedData = await fetchProductsCached(false, false, false);
         if (cachedData) {
-          if (cachedData.products) {
-            // Use cached data to find matching products
-            const allProducts = cachedData.products;
-            const productTitle = product.title.toLowerCase();
+          // Use cached data to find matching products
+          const allProducts = [...cachedData.marketPartyProducts, ...cachedData.dailyDiscountProducts];
+          const productTitle = product.title.toLowerCase();
 
-            // Find matching products by title
-            const matches = allProducts.filter(
-              p => p.title.toLowerCase() === productTitle
-            );
+          // Find matching products by title
+          let matches = allProducts.filter(
+            p => p.title.toLowerCase() === productTitle
+          );
 
-            // Sort by discount percentage (highest first)
-            matches.sort((a, b) => b.discountRatio - a.discountRatio);
+          // remove products with same vendor code
+          matches = matches.filter((value, index, self) =>
+            index === self.findIndex((t) => (
+              t.vendorCode === value.vendorCode
+            ))
+          );
 
-            setVendorProducts(matches);
-          } else {
-            console.error("Error finding product");
-          }
+          // Sort by final price and then discount
+          matches.sort(compareProducts);
 
+          // set state
+          setVendorProducts(matches);
           setVendors(cachedData.vendors);
         }
       } catch (error) {
@@ -58,8 +62,8 @@ export default function ProductVendorList({ product }: ProductProps) {
           const isVendorPro = vendor?.data.is_pro || false;
           return (
             <List.Item
-              key={`${vendorProduct.vendorCode}-${vendorProduct.productVariationId}`}
-              title={vendorProduct.vendorTitle}
+              key={`${vendorProduct.vendorCode}-${getProductId(vendorProduct)}`}
+              title={vendor!.data.title}
               subtitle={formatPrice(vendorProduct.price)}
               accessories={[
                 isVendorPro ? {

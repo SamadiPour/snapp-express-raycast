@@ -10,14 +10,15 @@ interface Vendor {
 }
 
 interface DataCache {
-  products: MarketPartyProduct[];
+  marketPartyProducts: MarketPartyProduct[];
+  dailyDiscountProducts: GeneralProduct[];
   vendors: Vendor[];
   lastFetchTimestamp: Date;
   isFromCache: boolean;
 }
 
 interface PinnedProductInfo {
-  productVariationId: number;
+  id: number;
   title: string;
 }
 
@@ -36,7 +37,7 @@ interface MarketPartyProduct {
 interface GeneralProduct {
   id: number;
   discount: number;
-  discount_ratio: number;
+  discountRatio: number;
   images: {
     main: string;
     position: number;
@@ -55,9 +56,11 @@ interface GeneralProduct {
   brand_id: number;
   stock: number;
   title: string;
+  vendorCode: string;
+  vendorTitle: string;
 }
 
-type Product = MarketPartyProduct & GeneralProduct;
+type Product = MarketPartyProduct | GeneralProduct;
 
 
 // ======== responses ========
@@ -95,14 +98,14 @@ interface VendorsResponse {
 
 // ======== page props ========
 interface ProductProps {
-  product: MarketPartyProduct;
+  product: Product;
 }
 
 interface ProductItemProps {
-  product: MarketPartyProduct;
+  product: Product;
   isPinned: boolean;
-  onPinProduct: (product: MarketPartyProduct) => Promise<void>;
-  onUnpinProduct: (product: MarketPartyProduct) => Promise<void>;
+  onPinProduct: (product: Product) => Promise<void>;
+  onUnpinProduct: (product: Product) => Promise<void>;
   onRefreshData: () => Promise<void>;
 }
 

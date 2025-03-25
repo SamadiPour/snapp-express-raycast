@@ -35,6 +35,16 @@
       "description": "",
       "link": "",
       "placeholder": "51.404343"
+    },
+    {
+      "name": "dailyDiscounts",
+      "type": "checkbox",
+      "required": false,
+      "default": false,
+      "title": "Include Daily Discounts",
+      "description": "Note: Enabling this option significantly increases the time required to gather all the data.",
+      "link": "",
+      "placeholder": ""
     }
   ],
   "dependencies": {

@@ -1,13 +1,14 @@
 import { Action, ActionPanel, Detail } from "@raycast/api";
 import { formatPrice, getDiscountColor } from "./utils";
+import { getProductId, getProductImage } from "./logic/product-utils";
 
 export default function ProductDetails({ product }: ProductProps) {
   return (
     <Detail
-      markdown={`![Product Image](${product.main_image || "https://placehold.co/300x300?text=No+Image"})`}
+      markdown={`![Product Image](${getProductImage(product)})`}
       metadata={
         <Detail.Metadata>
-          <Detail.Metadata.Label title="Product ID" text={product.productVariationId.toString()} />
+          <Detail.Metadata.Label title="Product ID" text={getProductId(product).toString()} />
           <Detail.Metadata.Label title="Product Title" text={product.title} />
           <Detail.Metadata.Separator />
           <Detail.Metadata.Label
@@ -29,8 +30,8 @@ export default function ProductDetails({ product }: ProductProps) {
       actions={
         <ActionPanel>
           <Action.CopyToClipboard title="Copy Title" content={product.title} />
-          {product.main_image && (
-            <Action.CopyToClipboard title="Copy Image URL" content={product.main_image} />
+          {getProductImage(product) && (
+            <Action.CopyToClipboard title="Copy Image URL" content={getProductImage(product)} />
           )}
         </ActionPanel>
       }

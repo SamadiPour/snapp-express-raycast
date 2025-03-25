@@ -1,7 +1,8 @@
-import { Action, ActionPanel, Icon, List } from "@raycast/api";
+import { Action, ActionPanel, Icon, List, openCommandPreferences } from "@raycast/api";
 import { formatPrice, getDiscountColor } from "../utils";
 import ProductVendorList from "../product-vendor-list";
 import ProductDetails from "../product-details";
+import { getProductId } from "../logic/product-utils";
 
 export function ProductItem(
   {
@@ -14,7 +15,7 @@ export function ProductItem(
 ) {
   return (
     <List.Item
-      key={product.productVariationId}
+      key={getProductId(product)}
       title={product.title}
       subtitle={product.vendorTitle}
       accessories={[
@@ -66,6 +67,12 @@ export function ProductItem(
             icon={Icon.ArrowClockwise}
             shortcut={{ modifiers: ["cmd"], key: "r" }}
             onAction={onRefreshData}
+          />
+          <Action
+            title="Extension Preferences"
+            icon={Icon.Cog}
+            shortcut={{ modifiers: ["cmd", "shift"], key: "," }}
+            onAction={openCommandPreferences}
           />
         </ActionPanel>
       }

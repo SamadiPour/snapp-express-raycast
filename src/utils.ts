@@ -1,5 +1,5 @@
 export function formatPrice(price: number): string {
-  return `${price.toLocaleString()} تومان`;
+  return `${Math.floor(price).toLocaleString()} تومان`;
 }
 
 export function getLastUpdatedText(timestamp: Date | null): string {
@@ -22,20 +22,4 @@ export function getDiscountColor(discountRatio: number): string {
   } else {
     return "#FFD700";
   }
-}
-
-export function getUniqueProducts(allProducts: MarketPartyProduct[]): MarketPartyProduct[] {
-  const productMap = new Map<number, MarketPartyProduct>();
-
-  allProducts.forEach((product) => {
-    if (!productMap.has(product.productVariationId) || productMap.get(product.productVariationId)!.discountRatio < product.discountRatio) {
-      productMap.set(product.productVariationId, product);
-    }
-  });
-
-  return Array.from(productMap.values());
-}
-
-export function productDuplicateCount(allProducts: MarketPartyProduct[], product: MarketPartyProduct): number {
-  return allProducts.filter(p => p.productVariationId === product.productVariationId).length;
 }

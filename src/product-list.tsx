@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import { List, showToast, Toast } from "@raycast/api";
 import { fetchProductsCached } from "./logic/api";
-import { getLastUpdatedText, getUniqueProducts } from "./utils";
+import { getLastUpdatedText } from "./utils";
 import { findPinnedProducts, getPinnedProducts, pinProduct, unpinProduct } from "./logic/pin-product";
 import { ProductItem } from "./components/product-item";
 import { MissingPinnedProduct } from "./components/missing-pinned-item";
+import { getProductId, getUniqueProducts } from "./logic/product-utils";
 
 export default function Command() {
   const [isLoading, setIsLoading] = useState(true);
-  const [products, setProducts] = useState<MarketPartyProduct[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [pinnedInfos, setPinnedInfos] = useState<PinnedProductInfo[]>([]);
   const [lastFetchTime, setLastFetchTime] = useState<Date | null>(null);
 
@@ -19,12 +20,13 @@ export default function Command() {
     try {
       const cachedData = await fetchProductsCached(
         true, true, forceRefresh,
-        (vendors) => showToast(Toast.Style.Animated, `Fetching products from ${vendors.length} vendors...`)
+        (message) => showToast(Toast.Style.Animated, message)
       );
 
       if (cachedData) {
         // Process products (deduplicate and sort)
-        const uniqueProducts = getUniqueProducts(cachedData.products);
+        const allProducts : Product[] = [...cachedData.marketPartyProducts, ...cachedData.dailyDiscountProducts];
+        const uniqueProducts = getUniqueProducts(allProducts);
         uniqueProducts.sort((a, b) => b.discountRatio - a.discountRatio);
 
         // Set state
@@ -43,15 +45,17 @@ export default function Command() {
   };
 
   // Handle pinning a product
-  const handlePinProduct = async (product: MarketPartyProduct) => {
-    await pinProduct(product);
-    setPinnedInfos(prev => [...prev, product]);
-    await showToast(Toast.Style.Success, "Product pinned");
+  const handlePinProduct = async (product: Product) => {
+    const pinned = await pinProduct(product);
+    if (pinned) {
+      setPinnedInfos(prev => [...prev, pinned]);
+      await showToast(Toast.Style.Success, "Product pinned");
+    }
   };
 
   const handleUnpinProduct = async (productId: number) => {
     await unpinProduct(productId);
-    setPinnedInfos(prev => prev.filter(p => p.productVariationId !== productId));
+    setPinnedInfos(prev => prev.filter(p => p.id !== productId));
     await showToast(Toast.Style.Success, "Product unpinned");
   };
 
@@ -61,8 +65,8 @@ export default function Command() {
   }, []);
 
   const { pinnedProducts, missingPinnedProducts } = findPinnedProducts(products, pinnedInfos);
-  const pinnedProductIds = new Set(pinnedInfos.map(p => p.productVariationId));
-  const unpinnedProducts = products.filter(product => !pinnedProductIds.has(product.productVariationId));
+  const pinnedProductIds = new Set(pinnedInfos.map(p => p.id));
+  const unpinnedProducts = products.filter(product => !pinnedProductIds.has(getProductId(product)));
 
   return (
     <List
@@ -75,11 +79,11 @@ export default function Command() {
           {/* Available pinned products */}
           {pinnedProducts.map((product) =>
             <ProductItem
-              key={product.productVariationId}
+              key={getProductId(product)}
               product={product}
               isPinned={true}
               onPinProduct={handlePinProduct}
-              onUnpinProduct={(p) => handleUnpinProduct(p.productVariationId)}
+              onUnpinProduct={(p) => handleUnpinProduct(getProductId(p))}
               onRefreshData={() => fetchData(true)}
             />
           )}
@@ -87,10 +91,10 @@ export default function Command() {
           {/* Missing pinned products */}
           {missingPinnedProducts.map((info) => (
             <MissingPinnedProduct
-              key={`missing-${info.productVariationId}`}
+              key={`missing-${info.id}`}
               info={info}
               onUnpin={async () => {
-                await handleUnpinProduct(info.productVariationId);
+                await handleUnpinProduct(info.id);
               }}
             />
           ))}
@@ -104,11 +108,11 @@ export default function Command() {
       >
         {unpinnedProducts.map((product) =>
           <ProductItem
-            key={product.productVariationId}
+            key={getProductId(product)}
             product={product}
             isPinned={false}
             onPinProduct={handlePinProduct}
-            onUnpinProduct={(p) => handleUnpinProduct(p.productVariationId)}
+            onUnpinProduct={(p) => handleUnpinProduct(getProductId(p))}
             onRefreshData={() => fetchData(true)}
           />
         )}
